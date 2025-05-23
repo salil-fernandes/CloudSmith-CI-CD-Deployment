@@ -48,4 +48,12 @@ It is my version of a minimalist PaaS offering inspired by Vercel, Heroku from S
 
 ---
 
+## ⚖️ Auto-scaling
+
+CloudSmith ensures efficient, demand-based scalability across its deployment infrastructure:
+
+- **Amazon ECS Auto Scaling**: Services deployed via **AWS Fargate** automatically scale based on CPU and memory utilization, ensuring consistent performance under varying loads without manual intervention.  
+- **Jenkins Load Management**: Build workloads are processed asynchronously and decoupled via Kafka, preventing bottlenecks during burst traffic.  
+- **Kafka-Driven Microservices**: Gitpulse, Buildrelay, and Docksage consume events independently, allowing them to scale horizontally based on topic traffic and system demand.
+
 > Built with ❤️ by Salil Fernandes
