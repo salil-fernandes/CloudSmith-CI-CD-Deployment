@@ -49,7 +49,7 @@ I decided to develop CloudSmith to showcase end-to-end ownership of a real-world
 
 ---
 
-## 🖼️ Architecture Diagram
+## 📷 Architecture Diagram
 
 ![CloudSmith Architecture](./assets/CloudSmith.png)
 
