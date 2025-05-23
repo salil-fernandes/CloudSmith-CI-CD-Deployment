@@ -17,6 +17,24 @@ It is my version of a minimalist PaaS offering inspired by Vercel, Heroku from S
 
 ---
 
+## ⚙️ Tech Stack
+
+**Frontend**: Next.js, TypeScript, Tailwind CSS, Chakra UI, NextAuth.js (OAuth)  
+**Backend**: Node.js, AWS Lambda, Jenkins  
+**Microservices**: Kafka-driven services (Gitpulse, Buildrelay, Docksage)  
+**Message Queue / Streaming**: Apache Kafka  
+**Storage**: Amazon S3  
+**Database**: Amazon DynamoDB  
+**Containerization**: Docker  
+**Container Orchestration**: AWS ECS (Fargate + EC2)  
+**CI/CD**: Jenkins  
+**Infrastructure as Code**: Terraform  
+**Cloud Provider**: AWS Amazon Web Services
+**Inter-service Communication**: Kafka Events  
+**Auto-scaling**: ECS Cluster Auto Scaling (Fargate)  
+
+---
+
 ## 📦 Architecture Overview
 
 - **Authspire** – Manages GitHub OAuth and session validation  
