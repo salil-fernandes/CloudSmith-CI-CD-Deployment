@@ -1,0 +1,331 @@
+pipeline {
+    agent any
+
+    parameters {
+        string(name: 'repo', defaultValue: '', description: 'Repository name (e.g., music-visualizer)')
+        string(name: 's3_url', defaultValue: '', description: 'S3 URL of the repo zip')
+        string(name: 'owner', defaultValue: '', description: 'owner of the repo')
+    }
+
+    environment {
+        AWS_REGION = 'us-west-2'
+        ACC_ID     = 'AWS ACC ID'
+        ECR_REPO   = 'cloudsmith'
+        CLUSTER    = 'cloudsmith-deployments'
+        TASK_ROLE  = "arn:aws:iam::${ACC_ID}:role/ecsTaskExecutionRole"
+        VPC_ID     = 'VPC FROM TERRAFORM'
+        SUBNET_A   = 'SUBNET A FROM TERRAFORM'
+        SUBNET_B   = 'SUBNET B FROM TERRAFORM'
+        SG_ID      = 'SECURITY GROUP FROM TERRAFORM'
+        DEPLOYMENT_API_URL = 'DEPLOYMENT UPDATES LAMBDA URL'
+    }
+
+    stages {
+        stage('Docker Test') {
+            steps {
+                sh 'docker ps'
+            }
+        }
+
+        stage('Prep: Download + Unzip') {
+    steps {
+        echo "📥 Downloading repo zip from ${params.s3_url}"
+        sh '''
+            rm -rf build_dir
+            mkdir build_dir
+            cd build_dir
+            curl -o repo.zip ${s3_url}
+            unzip repo.zip
+            ls -al
+        '''
+
+        script {
+            echo "📄 Reading app type from projectInfo..."
+            def appTypeLine = sh(script: "grep 'app-type=' build_dir/projectInfo.txt | head -1", returnStdout: true).trim()
+            if (!appTypeLine) {
+                error("❌ Could not find app-type in projectInfo file.")
+            }
+            def appType = appTypeLine.split('=')[-1].trim().toUpperCase()
+            echo "✅ Found app type: ${appType}"
+
+            def containerPort = (appType == 'REACT') ? 80 : (appType == 'DJANGO') ? 8000 : 8000
+            echo "📦 Setting containerPort to: ${containerPort}"
+
+            env.APP_TYPE = appType
+            env.CONTAINER_PORT = containerPort.toString()
+        }
+    }
+}
+
+
+        stage('Build Docker Image') {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'aws-access-key-id', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws-secret-access-key', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
+                    sh """
+                        cd build_dir
+                        echo "🛠 Configuring AWS credentials..."
+                        aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+                        aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+
+                        echo "🔐 Logging in to ECR..."
+                        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ACC_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+
+                        echo "🐳 Building Docker image..."
+                        docker build -t ${ECR_REPO}:${params.repo}-latest .
+
+                        echo "🏷 Tagging image..."
+                        docker tag ${ECR_REPO}:${params.repo}-latest ${ACC_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${params.repo}-latest
+
+                        echo "🚀 Pushing image..."
+                        docker push ${ACC_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${params.repo}-latest
+                    """
+                }
+            }
+        }
+
+        stage('Register Task Definition') {
+            steps {
+                script {
+                    def accountId = sh(script: "aws sts get-caller-identity --query Account --output text", returnStdout: true).trim()
+                    def ecrUrl = "${accountId}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${params.repo}-latest"
+                    def containerPort = env.CONTAINER_PORT as Integer
+
+                    def taskDefJson = """
+                    {
+                      "family": "${params.repo}",
+                      "networkMode": "awsvpc",
+                      "requiresCompatibilities": ["FARGATE"],
+                      "cpu": "256",
+                      "memory": "512",
+                      "executionRoleArn": "${TASK_ROLE}",
+                      "containerDefinitions": [
+                        {
+                          "name": "${params.repo}",
+                          "image": "${ecrUrl}",
+                          "portMappings": [
+                            {
+                              "containerPort": ${containerPort},
+                              "protocol": "tcp"
+                            }
+                          ],
+                          "essential": true
+                        }
+                      ]
+                    }
+                    """
+                    writeFile file: 'taskdef.json', text: taskDefJson
+                    sh 'echo "📝 Generated ECS Task Definition:"'
+                    sh 'cat taskdef.json'
+                    sh """
+                        echo "📦 Registering task definition with ECS..."
+                        aws ecs register-task-definition --cli-input-json file://taskdef.json
+                    """
+                }
+            }
+        }
+
+        stage('First Deployment Stages Updates') {
+            steps {
+                sh """
+                curl -X POST $DEPLOYMENT_API_URL \
+                -H "Content-Type: application/json" \
+                -d '{
+                "repoName": "${params.owner}/${params.repo}",
+                "updates": [
+                    { "stageName": "Docker Image Build & Push", "status": "done" },
+                    { "stageName": "ECS Task Definition & Registration", "status": "done" }
+                ]
+                }'
+                """
+            }
+            }
+
+        stage('Setup ALB + Target Group') {
+            steps {
+                script {
+                    def albName = "${params.repo}-alb"
+                    def tgName = "${params.repo}-tg"
+                    def containerPort = env.CONTAINER_PORT as Integer
+
+                    echo "✅ Found VPC ID: ${VPC_ID}"
+
+                    // ALB setup
+                    def albArn = sh(
+                        script: "aws elbv2 describe-load-balancers --names ${albName} --query 'LoadBalancers[0].LoadBalancerArn' --output text 2>/dev/null || echo 'NONE'",
+                        returnStdout: true
+                    ).trim()
+
+                    if (albArn == 'NONE') {
+                        echo "🚀 ALB doesn't exist. Creating ALB..."
+                        albArn = sh(
+                            script: """
+                                aws elbv2 create-load-balancer \
+                                    --name ${albName} \
+                                    --subnets ${SUBNET_A} ${SUBNET_B} \
+                                    --security-groups ${SG_ID} \
+                                    --scheme internet-facing \
+                                    --type application \
+                                    --query 'LoadBalancers[0].LoadBalancerArn' \
+                                    --output text
+                            """,
+                            returnStdout: true
+                        ).trim()
+                        echo "✅ Created ALB: ${albArn}"
+                    } else {
+                        echo "✅ ALB already exists: ${albArn}"
+                    }
+
+                    def albDns = sh(
+                        script: "aws elbv2 describe-load-balancers --names ${albName} --query 'LoadBalancers[0].DNSName' --output text",
+                        returnStdout: true
+                    ).trim()
+                    echo "🌐 ALB DNS: http://${albDns}"
+
+                    // Target Group setup
+                    def tgArn = sh(
+                        script: "aws elbv2 describe-target-groups --names ${tgName} --query 'TargetGroups[0].TargetGroupArn' --output text 2>/dev/null || echo 'NONE'",
+                        returnStdout: true
+                    ).trim()
+
+                    if (tgArn == 'NONE') {
+                        echo "🚀 Target Group doesn't exist. Creating Target Group..."
+                        tgArn = sh(
+                            script: """
+                                aws elbv2 create-target-group \
+                                    --name ${tgName} \
+                                    --protocol HTTP \
+                                    --port ${containerPort} \
+                                    --vpc-id ${VPC_ID} \
+                                    --target-type ip \
+                                    --query 'TargetGroups[0].TargetGroupArn' \
+                                    --output text
+                            """,
+                            returnStdout: true
+                        ).trim()
+                        echo "✅ Created Target Group: ${tgArn}"
+                    } else {
+                        echo "✅ Target Group already exists: ${tgArn}"
+                    }
+
+                    // Listener setup
+                    def listenerArn = sh(
+                        script: "aws elbv2 describe-listeners --load-balancer-arn ${albArn} --query 'Listeners[?Port==`80`].ListenerArn' --output text 2>/dev/null || echo 'NONE'",
+                        returnStdout: true
+                    ).trim()
+
+                    if (listenerArn == 'NONE' || listenerArn == '') {
+                        echo "🚀 Listener doesn't exist. Creating Listener on port 80..."
+                        listenerArn = sh(
+                            script: """
+                                aws elbv2 create-listener \
+                                    --load-balancer-arn ${albArn} \
+                                    --protocol HTTP \
+                                    --port 80 \
+                                    --default-actions Type=forward,TargetGroupArn=${tgArn} \
+                                    --query 'Listeners[0].ListenerArn' \
+                                    --output text
+                            """,
+                            returnStdout: true
+                        ).trim()
+                        echo "✅ Created Listener: ${listenerArn}"
+                    } else {
+                        echo "✅ Listener already exists: ${listenerArn}"
+                    }
+
+                    // Save for next stage
+                    env.FINAL_ALB_DNS = albDns
+                    env.FINAL_TG_ARN = tgArn
+                    env.FINAL_CONTAINER_PORT = containerPort.toString()
+                }
+            }
+        }
+
+        stage('Deploy Service & Output URL') {
+            steps {
+                script {
+                    def serviceName = params.repo
+                    def taskDefFamily = params.repo
+                    def albDns = env.FINAL_ALB_DNS
+                    def tgArn = env.FINAL_TG_ARN
+                    def containerPort = env.FINAL_CONTAINER_PORT
+
+                    def latestTaskDefArn = sh(
+                        script: "aws ecs describe-task-definition --task-definition ${taskDefFamily} --query 'taskDefinition.taskDefinitionArn' --output text",
+                        returnStdout: true
+                    ).trim()
+                    echo "✅ Latest Task Definition ARN: ${latestTaskDefArn}"
+
+                    def serviceStatus = sh(
+                        script: "aws ecs describe-services --cluster ${CLUSTER} --services ${serviceName} --query 'services[0].status' --output text || echo 'MISSING'",
+                        returnStdout: true
+                    ).trim()
+
+                    if (serviceStatus == 'ACTIVE') {
+                        echo "🔄 Service ${serviceName} exists. Updating to use the new task definition..."
+                        sh """
+                            aws ecs update-service --cluster ${CLUSTER} --service ${serviceName} --task-definition ${latestTaskDefArn}
+                        """
+                    } else {
+                        echo "🚀 Service ${serviceName} does not exist. Creating new service..."
+                        sh """
+                            aws ecs create-service \
+                                --cluster ${CLUSTER} \
+                                --service-name ${serviceName} \
+                                --task-definition ${latestTaskDefArn} \
+                                --launch-type FARGATE \
+                                --desired-count 1 \
+                                --network-configuration 'awsvpcConfiguration={subnets=[${SUBNET_A},${SUBNET_B}],securityGroups=[${SG_ID}],assignPublicIp=ENABLED}' \
+                                --load-balancers '[{"targetGroupArn":"${tgArn}","containerName":"${params.repo}","containerPort":${containerPort}}]'
+                        """
+                    }
+
+                    echo "🌐 Your app is deployed at: http://${albDns}"
+                }
+            }
+        }
+
+        stage('Upload URL to Dynamo Deployments') {
+            steps {
+                script {
+                    def deployedUrl = env.FINAL_ALB_DNS
+                    if (deployedUrl?.trim()) {
+                        def payload = """{
+                            "repoName": "${params.owner}/${params.repo}",
+                            "updates": [],
+                            "deployedUrl": "${deployedUrl}"
+                        }"""
+                        echo "📡 Uploading deployed URL to Dynamo: ${deployedUrl}"
+                        sh """
+                        curl -X POST $DEPLOYMENT_API_URL \
+                        -H "Content-Type: application/json" \
+                        -d '${payload}'
+                        """
+                    } else {
+                        echo "⚠ No deployed URL found; skipping upload to Dynamo."
+                    }
+                }
+            }
+        }
+
+        stage('Second and Final Deployment Stages Updates') {
+            steps {
+                sh """
+                curl -X POST $DEPLOYMENT_API_URL \
+                -H "Content-Type: application/json" \
+                -d '{
+                "repoName": "${params.owner}/${params.repo}",
+                "updates": [
+                    { "stageName": "Load Balancer Setup & Target Group", "status": "done" },
+                    { "stageName": "Deploy Service", "status": "done" }
+                ],
+                "deploymentCompleted": true
+                }'
+                """
+            }
+            }
+
+    }
+}
