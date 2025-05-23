@@ -19,7 +19,7 @@ I decided to develop CloudSmith to showcase end-to-end ownership of a real-world
 
 ![CloudSmith Demo](./assets/cloudsmith.gif)
 
-
+---
 ## 💡💫 Features
 
 - **GitHub OAuth**: Secure public repo access integration via GitHub login  
