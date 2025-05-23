@@ -15,13 +15,10 @@ I decided to develop CloudSmith to showcase end-to-end ownership of a real-world
 
 ---
 
-## 🎥 Demo
+## 🎥 In Action
 
 ![CloudSmith Demo](./assets/cloudsmith.gif)
 
-## 🖼️ UI Preview
-
-![CloudSmith UI](./assets/CloudSmith.png)
 
 ## 💡💫 Features
 
@@ -51,6 +48,10 @@ I decided to develop CloudSmith to showcase end-to-end ownership of a real-world
 **Auto-scaling**: ECS Cluster Auto Scaling (Fargate)  
 
 ---
+
+## 🖼️ Architecture Diagram
+
+![CloudSmith Architecture](./assets/CloudSmith.png)
 
 ## 📦🏛️ Architecture Overview
 
