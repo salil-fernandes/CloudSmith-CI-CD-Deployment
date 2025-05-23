@@ -12,7 +12,7 @@ It is my version of a minimalist PaaS offering inspired by Vercel, Heroku from S
 - **Repo Picker**: Modern UI to select repositories for deployment  
 - **CI/CD Pipeline**: Jenkins and Groovy pipelines for build and deployment  
 - **Event-Driven Architecture**: Kafka powered inter-service communication  
-- **Infrastructure-as-Code**: Terraform managed AWS cloud services (Lambda, ECR, ECS, S3, IAM, DynamoDB)    
+- **Infrastructure-as-Code**: Terraform managed AWS cloud services 
 - **Microservices**: Auth, Launch, Pipeline, Build, Deploy  
 
 ---
