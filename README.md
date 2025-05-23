@@ -64,3 +64,17 @@ CloudSmith ensures efficient, demand-based scalability across its deployment inf
 - **Amazon ECS Auto Scaling**: Services deployed via **AWS Fargate** automatically scale based on CPU and memory utilization, ensuring consistent performance under varying loads without manual intervention.  
 - **Jenkins Load Management**: Build workloads are processed asynchronously and decoupled via Kafka, preventing bottlenecks during burst traffic.  
 - **Kafka-Driven Microservices**: Gitpulse, Buildrelay, and Docksage consume events independently, allowing them to scale horizontally based on topic traffic and system demand.
+
+## 🔮 Future Work & Potential Improvements
+
+- **Real-time Log Streaming**: Integrate WebSocket-based log streaming from Jenkins and ECS/EKS pods to the frontend for live build/deploy feedback.
+- **Deployment Rollbacks**: Implement one-click rollback to previous ECS/EKS service versions in case of failed or unstable deployments.
+- **EKS Support**: Extend deployment support to Kubernetes via Amazon EKS, enabling Helm-based deployments and KEDA-driven autoscaling for container workloads.
+- **Multi-Cloud Support**: Expand CloudSmith to support GCP and Azure, making it a cloud-agnostic deployment platform.
+- **Custom Domain Management**: Allow users to attach custom domains with automatic TLS via AWS Certificate Manager.
+- **Secret Management**: Integrate AWS Secrets Manager or HashiCorp Vault to securely manage deployment secrets.
+- **GitHub Actions Integration**: Support GitHub Actions as an alternative to Jenkins for CI.
+- **Multi-Environment Deployments**: Enable staging/production environments with isolated pipelines, namespaces, and ALBs.
+- **Metrics Dashboard**: Add Prometheus + Grafana dashboards to monitor build status, deploy latency, and service health.
+- **Access Control**: Implement Role-Based Access Control (RBAC) for team-level permissions.
+
