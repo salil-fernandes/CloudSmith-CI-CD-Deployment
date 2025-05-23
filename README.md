@@ -1,6 +1,6 @@
 # CloudSmith  ☁️🚀
 **A Cloud-Native Deployment Platform for One-Click Web App Deployments**
-<p style="color: #5c5c5c; margin-top: -10px;">Built with ❤️ by Salil Fernandes</p>
+<p style="color: red; margin-top: -10px;">Built with ❤️ by Salil Fernandes</p>
 
 
 CloudSmith is a developer-centric CI/CD platform that lets you deploy web apps directly from GitHub with a single click. Powered by event-driven microservices and scalable AWS infrastructure, CloudSmith automates the entire pipeline — from GitHub OAuth to production deployment. 
