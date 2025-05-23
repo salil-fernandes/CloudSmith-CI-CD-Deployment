@@ -1,8 +1,16 @@
 # CloudSmith  ☁️🚀
-**A Cloud-Native Deployment Platform for One-Click Web App Deployments**
+**A Cloud-Native Deployment Platform for One-Click Web App Deployments**          > Built with ❤️ by Salil Fernandes
 
 CloudSmith is a developer-centric CI/CD platform that lets you deploy web apps directly from GitHub with a single click. Powered by event-driven microservices and scalable AWS infrastructure, CloudSmith automates the entire pipeline — from GitHub OAuth to production deployment. 
 It is my version of a minimalist PaaS offering inspired by Vercel, Heroku from Salesforce, Netlify and Hostinger.
+
+## 📌 Highlights
+
+- Hands-on experience with scalable cloud architecture  
+- Focus on automation, reliability, and clean developer experience  
+- Full-stack engineering across frontend, backend, DevOps, and cloud  
+
+CloudSmith showcases end-to-end ownership of a real-world CI/CD system — from OAuth authentication to production deployment. It demonstrates hands-on experience with distributed systems, cloud infrastructure, microservices, and DevOps best practices.
 
 ---
 
@@ -55,13 +63,3 @@ CloudSmith ensures efficient, demand-based scalability across its deployment inf
 - **Amazon ECS Auto Scaling**: Services deployed via **AWS Fargate** automatically scale based on CPU and memory utilization, ensuring consistent performance under varying loads without manual intervention.  
 - **Jenkins Load Management**: Build workloads are processed asynchronously and decoupled via Kafka, preventing bottlenecks during burst traffic.  
 - **Kafka-Driven Microservices**: Gitpulse, Buildrelay, and Docksage consume events independently, allowing them to scale horizontally based on topic traffic and system demand.
-
-## 📌 Highlights
-
-- Hands-on experience with scalable cloud architecture  
-- Focus on automation, reliability, and clean developer experience  
-- Full-stack engineering across frontend, backend, DevOps, and cloud  
-
-CloudSmith showcases end-to-end ownership of a real-world CI/CD system — from OAuth authentication to production deployment. It demonstrates hands-on experience with distributed systems, cloud infrastructure, microservices, and DevOps best practices.
-
-> Built with ❤️ by Salil Fernandes
