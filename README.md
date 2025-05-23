@@ -13,13 +13,11 @@ It is my version of a minimalist **PaaS** offering inspired by Vercel, Heroku fr
 
 I decided to develop CloudSmith to showcase end-to-end ownership of a real-world CI/CD system — from OAuth authentication to production deployment. I also wanted to reinforce my skillset in cloud infrastructure, microservices, distributed systems and DevOps best practices.
 
----
 
 ## 🎥 In Action
 
 ![CloudSmith Demo](./assets/cloudsmith.gif)
 
----
 ## 💡💫 Features
 
 - **GitHub OAuth**: Secure public repo access integration via GitHub login  
@@ -29,7 +27,6 @@ I decided to develop CloudSmith to showcase end-to-end ownership of a real-world
 - **Infrastructure-as-Code**: Terraform managed AWS cloud services 
 - **Microservices**: Auth, Launch, Pipeline, Build, Deploy  
 
----
 
 ## ⚙️🛠️ Tech Stack
 
@@ -47,7 +44,6 @@ I decided to develop CloudSmith to showcase end-to-end ownership of a real-world
 **Inter-service Communication**: Kafka Events  
 **Auto-scaling**: ECS Cluster Auto Scaling (Fargate)  
 
----
 
 ## 📷 Architecture Diagram
 
@@ -64,7 +60,6 @@ I decided to develop CloudSmith to showcase end-to-end ownership of a real-world
 - **DynamoDB + S3** – Tracks deployment state and stores build artifacts  
 - **Application Load Balance ALB** – Exposes live deployed apps via DNS
 
----
 
 ## 🌀♻️ Auto-scaling
 
