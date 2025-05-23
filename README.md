@@ -12,11 +12,11 @@ It is my version of a minimalist PaaS offering inspired by Vercel, Heroku from S
 - Focus on automation, reliability, and clean developer experience  
 - Full-stack engineering across frontend, backend, DevOps, and cloud  
 
-CloudSmith showcases end-to-end ownership of a real-world CI/CD system — from OAuth authentication to production deployment. It demonstrates hands-on experience with distributed systems, cloud infrastructure, microservices, and DevOps best practices.
+I decided to develop CloudSmith to showcase end-to-end ownership of a real-world CI/CD system — from OAuth authentication to production deployment. I also wanted to reinforce my skillset in cloud infrastructure, microservices, distributed systems and DevOps best practices.
 
 ---
 
-## 🔧 Features
+## 💡💫 Features
 
 - **GitHub OAuth**: Secure public repo access integration via GitHub login  
 - **Repo Picker**: Modern UI to select repositories for deployment  
@@ -27,7 +27,7 @@ CloudSmith showcases end-to-end ownership of a real-world CI/CD system — from 
 
 ---
 
-## ⚙️ Tech Stack
+## ⚙️🛠️ Tech Stack
 
 **Frontend**: Next.js, TypeScript, Tailwind CSS, Chakra UI, NextAuth.js (OAuth)  
 **Backend**: Node.js, AWS Lambda, Jenkins  
@@ -45,7 +45,7 @@ CloudSmith showcases end-to-end ownership of a real-world CI/CD system — from 
 
 ---
 
-## 📦 Architecture Overview
+## 📦🏛️ Architecture Overview
 
 - **Authspire** – Manages GitHub OAuth and session validation  
 - **Launchboard** – UI for repo selection and deployment triggers  
@@ -58,7 +58,7 @@ CloudSmith showcases end-to-end ownership of a real-world CI/CD system — from 
 
 ---
 
-## ⚖️ Auto-scaling
+## 🌀♻️ Auto-scaling
 
 CloudSmith ensures efficient, demand-based scalability across its deployment infrastructure:
 
@@ -66,7 +66,7 @@ CloudSmith ensures efficient, demand-based scalability across its deployment inf
 - **Jenkins Load Management**: Build workloads are processed asynchronously and decoupled via Kafka, preventing bottlenecks during burst traffic.  
 - **Kafka-Driven Microservices**: Gitpulse, Buildrelay, and Docksage consume events independently, allowing them to scale horizontally based on topic traffic and system demand.
 
-## 🔮 Future Work & Potential Improvements
+## 🌱 Future Work & Potential Improvements
 
 - **Real-time Log Streaming**: Integrate WebSocket-based log streaming from Jenkins and ECS/EKS pods to the frontend for live build/deploy feedback.
 - **Deployment Rollbacks**: Implement one-click rollback to previous ECS/EKS service versions in case of failed or unstable deployments.
