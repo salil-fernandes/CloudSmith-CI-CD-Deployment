@@ -1,0 +1,8 @@
+{
+  "/page": "app/page.js",
+  "/api/github/repos/route": "app/api/github/repos/route.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/api/deployments/[repoName]/reset/route": "app/api/deployments/[repoName]/reset/route.js",
+  "/deployments/[repoName]/page": "app/deployments/[repoName]/page.js",
+  "/api/deployments/[repoName]/route": "app/api/deployments/[repoName]/route.js"
+}
