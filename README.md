@@ -26,7 +26,7 @@ It is my version of a minimalist PaaS offering inspired by Vercel, Heroku from S
 - **AWS Lambda** – Triggers containerization and service registration  
 - **Docker + ECR + ECS/Fargate** – Builds, pushes, and deploys containers at scale  
 - **DynamoDB + S3** – Tracks deployment state and stores build artifacts  
-- **ALB** – Exposes live deployed apps via DNS
+- **Application Load Balance ALB** – Exposes live deployed apps via DNS
 
 ---
 
